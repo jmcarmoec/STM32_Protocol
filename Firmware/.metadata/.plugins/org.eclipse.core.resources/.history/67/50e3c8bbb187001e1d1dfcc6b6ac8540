@@ -1,0 +1,66 @@
+/*
+ * USBServices.c
+ *
+ *  Created on: Nov 20, 2023
+ *      Author: joaom
+ */
+
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "USBServices.h"
+
+#include "cmsis_os2.h"
+
+#include "Message/MSG.h"
+
+extern osMessageQueueId_t USBTxQueueHandle;
+
+int print_USB(const char* format, ...){
+	if(!format){
+		return -1;
+	}
+
+	Msg_t msg = {0};
+
+	msg.msg = (uint8_t*) calloc(MSG_MAX_LEN,sizeof(Msg_t));
+	if(!msg.msg){
+		free(msg);
+		return -1;
+	}
+
+	va_list args;
+	va_start(args, format);
+
+	if(vsnprintf(msg->msg,MSG_MAX_LEN,format, args) < 0){
+		va_end(args);
+		return -1;
+	}
+
+	va_end(args);
+
+	osMessageQueuePut(USBTxQueueHandle, msg, NULL, 0xFF);
+
+	return 0;
+}
+
+void USBTxTask(void *argument){
+	osStatus_t status = osOK;
+	Msg_t msg = {0};
+
+	uint32_t tout = 0xFF;
+
+	while(1){
+		status = osMessageQueueGet(USBTxQueueHandle, &msg, NULL, osWaitForever);
+
+		if(status != osOK){
+			continue;
+		}
+
+		CDC_Transmit_FS(msg.msg, msg.len);
+
+		//free(msg);
+		free(msg.msg);
+	}
+}

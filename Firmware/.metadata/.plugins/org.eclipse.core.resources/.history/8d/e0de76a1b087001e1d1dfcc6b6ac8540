@@ -1,0 +1,17 @@
+/*
+ * USBServices.h
+ *
+ *  Created on: Nov 20, 2023
+ *      Author: joaom
+ */
+
+#ifndef SRC_SERVICES_USB_USBSERVICES_H_
+#define SRC_SERVICES_USB_USBSERVICES_H_
+
+#define MSG_MAX_LEN	(250)
+
+extern int setUSBHandleQueue(osMessageQueueId_t* handle);
+extern int print_USB(const char* format, ...);
+
+extern void USBTxTask(void *argument);
+#endif /* SRC_SERVICES_USB_USBSERVICES_H_ */

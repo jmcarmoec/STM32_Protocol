@@ -1,0 +1,2 @@
+../Core/Src/Services/USB/USBServices.c:20:5:print_USB	5
+../Core/Src/Services/USB/USBServices.c:57:6:USBTxTask	2

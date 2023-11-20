@@ -1,0 +1,2 @@
+../Core/Src/Services/UART/UARTServices.c:23:5:print_UART	5
+../Core/Src/Services/UART/UARTServices.c:60:6:UARTTxTask	2

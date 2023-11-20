@@ -1,0 +1,71 @@
+/*
+ * USBServices.c
+ *
+ *  Created on: Nov 20, 2023
+ *      Author: joaom
+ */
+
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "UARTServices.h"
+
+#include "cmsis_os2.h"
+
+#include "Message/MSG.h"
+
+extern osMessageQueueId_t UARTTxQueueHandle;
+
+int print_UART(const char* format, ...){
+	if(!format){
+		return -1;
+	}
+
+	Msg_t msg = {0};
+	va_list args;
+	osStatus_t status = osOK;
+
+	msg.msg = (uint8_t*) calloc(MSG_MAX_LEN,sizeof(Msg_t));
+
+	if(!msg.msg){
+		return -1;
+	}
+
+	va_start(args, format);
+
+	if(vsnprintf(msg.msg,MSG_MAX_LEN,format, args) < 0){
+		va_end(args);
+		free(msg.msg);
+		return -1;
+	}
+
+	va_end(args);
+
+
+	msg.len = strlen(msg.msg);
+
+	status = osMessageQueuePut(UARTTxQueueHandle, &msg, NULL, 0xFF);
+
+	if(status != osOK){
+		return -1;
+	}
+
+	return 0;
+}
+
+void UARTTxTask(void *argument){
+	osStatus_t status = osOK;
+	Msg_t msg = {0};
+
+	while(1){
+		status = osMessageQueueGet(UARTTxQueueHandle, &msg, NULL, osWaitForever);
+
+		if(status != osOK){
+			continue;
+		}
+
+		CDC_Transmit_FS(msg.msg, msg.len);
+
+		free(msg.msg);
+	}
+}
